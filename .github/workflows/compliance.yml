@@ -1,0 +1,34 @@
+name: Compliance Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Required files exist
+        run: |
+          for f in README.md LICENSE LICENSE-DOCS.md CHANGELOG.md SECURITY.md CONTRIBUTING.md VERSION; do
+            test -f "$f" || { echo "Missing $f"; exit 1; }
+          done
+
+      - name: Version format
+        run: grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' VERSION
+
+      - name: License checks
+        run: |
+          grep -q "MIT License" LICENSE
+          grep -q "Creative Commons Attribution-ShareAlike" LICENSE-DOCS.md
+
+      - name: ITIL fail rule
+        run: grep -R "FAIL > 0" README.md SECURITY.md CONTRIBUTING.md COMPLIANCE-AUDIT.md
+
+      - name: Accountability line
+        run: grep -R "Co-authored by Microsoft 365 Copilot - Derek's Subscription" README.md LICENSE LICENSE-DOCS.md CHANGELOG.md SECURITY.md CONTRIBUTING.md COMPLIANCE-AUDIT.md PUBLISHING.md
+
+      - name: Compliance passed
+        run: echo "Compliance passed"
